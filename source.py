@@ -1,17 +1,30 @@
 # Generalizar o codigo (trocar img1 e img2 por img 1 e 2).
 # Passar as imagens com argv.
 # Só funciona para imagens com 1 rosto sem óculos.
-# Tirar testa -> diminuir rosto até a altura do olho mais alto. 
+# Tirar testa -> diminuir rosto até a altura do olho mais alto.
 import cv2
 import numpy as np
 import math
 import matplotlib.pyplot as plt
+import os
+
+windows = False
 
 # Declarar funções cascada.
-face_cascade = cv2.CascadeClassifier('/Users/Pedro/AppData/Local/Programs/Python/Python37/Lib/site-packages/cv2/data/haarcascade_frontalface_default.xml')
-eye_cascade = cv2.CascadeClassifier('/Users/Pedro/AppData/Local/Programs/Python/Python37/Lib/site-packages/cv2/data/haarcascade_eye.xml')
-smile_cascade = cv2.CascadeClassifier('/Users/Pedro/AppData/Local/Programs/Python/Python37/Lib/site-packages/cv2/data/haarcascade_smile.xml')
-
+if windows:
+  face_cascade = cv2.CascadeClassifier('/Users/Pedro/AppData/Local/Programs/Python/Python37/Lib/site-packages/cv2/data/haarcascade_frontalface_default.xml')
+  eye_cascade = cv2.CascadeClassifier('/Users/Pedro/AppData/Local/Programs/Python/Python37/Lib/site-packages/cv2/data/haarcascade_eye.xml')
+  smile_cascade = cv2.CascadeClassifier('/Users/Pedro/AppData/Local/Programs/Python/Python37/Lib/site-packages/cv2/data/haarcascade_smile.xml')
+else:
+  haarcascades_path = os.path.dirname(cv2.__file__) + "/data/haarcascade_frontalface_default.xml"
+  print(haarcascades_path)
+  face_cascade = cv2.CascadeClassifier(haarcascades_path)
+  haarcascades_path = os.path.dirname(cv2.__file__) + "/data/haarcascade_eye.xml"
+  print(haarcascades_path)
+  eye_cascade = cv2.CascadeClassifier(haarcascades_path)
+  haarcascades_path = os.path.dirname(cv2.__file__) + "/data/haarcascade_smile.xml"
+  print(haarcascades_path)
+  smile_cascade = cv2.CascadeClassifier(haarcascades_path)
 # Ler imagens.
 img2_original= cv2.imread('faces/test1.jpg')
 img1_original = cv2.imread('faces/test2.jpg')
@@ -106,40 +119,40 @@ roi1 = cv2.resize(roi1, (roi2.shape[1],roi2.shape[0]), interpolation = cv2.INTER
 
 # Processar roi1.
 
-# k=4
-# yuv = cv2.cvtColor(roi1,cv2.COLOR_BGR2YUV)
-# # Defino os critérios máximo de iterações = 10 e epsilon = 1.0
-# criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 10, 1.0)
-# flags = cv2.KMEANS_RANDOM_CENTERS
-# # Transformo as 3 componentes do frame em uma imagem só YUV
-# # Retiro somente as crominâncias
-# Z = yuv[:,:,1:3].copy()
-# # Transformo a matriz em um vetor 1D com os canais U e V separados
-# Z = Z.reshape((-1, 2))
-# # Converto para float32
-# Z = np.float32(Z)
-# # Realizo Kmeans a partir das componentes U e V
-# _,labels,_ = cv2.kmeans(Z,k,None,criteria,10,flags)
-# labels = labels.reshape(yuv.shape[:2])
-# label = labels[labels.shape[0]//2, labels.shape[1]//2]
-# labels[labels==label] = -1
-# labels[labels!=-1] = 0
-# labels[labels==-1] = 1
-# print(labels[labels.shape[0]//2, labels.shape[1]//2])
-# #plt.matshow(labels.reshape(hsv.shape[:2]))
-# #plt.show()
-# print(labels)
-# # roi1 = np.uint8(roi1*labels[:,:,np.newaxis])
+k=4
+yuv = cv2.cvtColor(roi1,cv2.COLOR_BGR2YUV)
+# Defino os critérios máximo de iterações = 10 e epsilon = 1.0
+criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 10, 1.0)
+flags = cv2.KMEANS_RANDOM_CENTERS
+# Transformo as 3 componentes do frame em uma imagem só YUV
+# Retiro somente as crominâncias
+Z = yuv[:,:,1:3].copy()
+# Transformo a matriz em um vetor 1D com os canais U e V separados
+Z = Z.reshape((-1, 2))
+# Converto para float32
+Z = np.float32(Z)
+# Realizo Kmeans a partir das componentes U e V
+_,labels,_ = cv2.kmeans(Z,k,None,criteria,10,flags)
+labels = labels.reshape(yuv.shape[:2])
+label = labels[labels.shape[0]//2, labels.shape[1]//2]
+labels[labels==label] = -1
+labels[labels!=-1] = 0
+labels[labels==-1] = 1
+print(labels[labels.shape[0]//2, labels.shape[1]//2])
+#plt.matshow(labels.reshape(hsv.shape[:2]))
+#plt.show()
+print(labels)
+# roi1 = np.uint8(roi1*labels[:,:,np.newaxis])
 
-# roi1hsv = cv2.cvtColor(roi1,cv2.COLOR_BGR2HSV)
-# roi2hsv = cv2.cvtColor(roi2,cv2.COLOR_BGR2HSV)
-# skin = np.uint8(roi2hsv*labels[:,:,np.newaxis])
-# skin[:,:,2:3] = 0
-# aux = roi1hsv.copy()
-# aux[:,:,0:2] = 0
-# noskin = np.uint8(roi1hsv*(1-labels[:,:,np.newaxis]) + aux*labels[:,:,np.newaxis])
-# roi1hsv = noskin + skin
-# roi1 = cv2.cvtColor(roi1hsv, cv2.COLOR_HSV2BGR)
+roi1hsv = cv2.cvtColor(roi1,cv2.COLOR_BGR2HSV)
+roi2hsv = cv2.cvtColor(roi2,cv2.COLOR_BGR2HSV)
+skin = np.uint8(roi2hsv*labels[:,:,np.newaxis])
+skin[:,:,2:3] = 0
+aux = roi1hsv.copy()
+aux[:,:,0:2] = 0
+noskin = np.uint8(roi1hsv*(1-labels[:,:,np.newaxis]) + aux*labels[:,:,np.newaxis])
+roi1hsv = noskin + skin
+roi1 = cv2.cvtColor(roi1hsv, cv2.COLOR_HSV2BGR)
 
 # Aplicar roi1 em img2.
 img2[img2_face[1]:(img2_face[1]+img2_face[3]),img2_face[0]:(img2_face[0]+img2_face[2])] = roi1
