@@ -17,17 +17,14 @@ if windows:
   smile_cascade = cv2.CascadeClassifier('/Users/Pedro/AppData/Local/Programs/Python/Python37/Lib/site-packages/cv2/data/haarcascade_smile.xml')
 else:
   haarcascades_path = os.path.dirname(cv2.__file__) + "/data/haarcascade_frontalface_default.xml"
-  print(haarcascades_path)
   face_cascade = cv2.CascadeClassifier(haarcascades_path)
   haarcascades_path = os.path.dirname(cv2.__file__) + "/data/haarcascade_eye.xml"
-  print(haarcascades_path)
   eye_cascade = cv2.CascadeClassifier(haarcascades_path)
   haarcascades_path = os.path.dirname(cv2.__file__) + "/data/haarcascade_smile.xml"
-  print(haarcascades_path)
   smile_cascade = cv2.CascadeClassifier(haarcascades_path)
 # Ler imagens.
-img2_original= cv2.imread('faces/test1.jpg')
-img1_original = cv2.imread('faces/test2.jpg')
+img2_original= cv2.imread('faces/test2.jpg')
+img1_original = cv2.imread('faces/test1.jpg')
 img1 = img1_original
 img2 = img2_original
 
@@ -120,7 +117,7 @@ roi1 = cv2.resize(roi1, (roi2.shape[1],roi2.shape[0]), interpolation = cv2.INTER
 # Processar roi1.
 
 k=4
-yuv = cv2.cvtColor(roi1,cv2.COLOR_BGR2YUV)
+yuv = cv2.cvtColor(roi1,cv2.COLOR_BGR2YCrCb)
 # Defino os critérios máximo de iterações = 10 e epsilon = 1.0
 criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 10, 1.0)
 flags = cv2.KMEANS_RANDOM_CENTERS
@@ -134,14 +131,12 @@ Z = np.float32(Z)
 # Realizo Kmeans a partir das componentes U e V
 _,labels,_ = cv2.kmeans(Z,k,None,criteria,10,flags)
 labels = labels.reshape(yuv.shape[:2])
+plt.matshow(labels.reshape(yuv.shape[:2]))
 label = labels[labels.shape[0]//2, labels.shape[1]//2]
 labels[labels==label] = -1
 labels[labels!=-1] = 0
 labels[labels==-1] = 1
-print(labels[labels.shape[0]//2, labels.shape[1]//2])
-#plt.matshow(labels.reshape(hsv.shape[:2]))
-#plt.show()
-print(labels)
+plt.matshow(labels.reshape(yuv.shape[:2]))
 # roi1 = np.uint8(roi1*labels[:,:,np.newaxis])
 
 roi1hsv = cv2.cvtColor(roi1,cv2.COLOR_BGR2HSV)
@@ -169,5 +164,6 @@ cv2.imshow('img2', img2)
 cv2.imshow('Face 1', roi1)
 cv2.imshow('Face 2', roi2)
 
-cv2.waitKey(0)
-cv2.destroyAllWindows()
+plt.show()
+# cv2.waitKey(0)
+# cv2.destroyAllWindows()
